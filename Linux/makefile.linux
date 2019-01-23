@@ -1,0 +1,70 @@
+INCLUDE_DIR=../include/
+
+SRC_DIR=./src
+EXT_LIB_DIR=./lib32/
+
+CC = gcc
+LD = gcc
+CFLAGS += -I $(INCLUDE_DIR) -g -Wall -fPIC
+CXXFLAGS += -I $(INCLUDE_DIR)
+
+LIBSFLAGS = -lm -lMCloud -lpthread
+
+EXES = ebclient audiorecorder backendASR2 backendSMT backendSMTAuth backendASR2Auth exampleClientSMT exampleWorkerBinary exampleClientBinary
+
+OS = $(shell uname -s)
+TARGET_PLATFORM ?= $(shell uname -m)
+ACCEPT_PLATFORM = "no"
+
+ifeq ($(TARGET_PLATFORM), x86_64)
+ACCEPT_PLATFORM = "yes"
+EXT_LIB_DIR=./lib64/
+CFLAGS += -m64
+CXXFLAGS += -m64
+LDFLAGS += -m64
+endif
+
+ifeq ($(TARGET_PLATFORM), i686)
+ACCEPT_PLATFORM = "yes"
+EXT_LIB_DIR=./lib32/
+CFLAGS += -m32
+CXXFLAGS += -m32
+LDFLAGS += -m32
+endif
+
+LDFLAGS += -L $(EXT_LIB_DIR)
+
+ifeq ($(ACCEPT_PLATFORM), "no")
+$(error Unsupported TARGET_PLATFORM = $(TARGET_PLATFORM))
+endif
+
+
+all: $(EXES)
+
+
+%: $(SRC_DIR)/%.o
+	LD_LIBRARY_PATH=$(EXT_LIB_DIR) $(LD) $(LDFLAGS) -o $@ $< $(LIBSFLAGS)
+
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(SRC_DIR)/ebclient.o: $(SRC_DIR)/exampleClientBidir.c
+	$(CC) $(CFLAGS) -c -o $(SRC_DIR)/ebclient.o $(SRC_DIR)/exampleClientBidir.c
+
+$(SRC_DIR)/audiorecorder.o: $(SRC_DIR)/audioRecorder.c
+	$(CC) $(CFLAGS) -c -o $(SRC_DIR)/audiorecorder.o $(SRC_DIR)/audioRecorder.c
+
+%: $(SRC_DIR)/%.o
+	LD_LIBRARY_PATH=$(EXT_LIB_DIR) $(LD) $(LDFLAGS) -o $@ $< $(LIBSFLAGS)
+
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+
+
+clean:
+	rm -f $(EXES)
+	rm -f $(SRC_DIR)/*.o
+
+.PHONY: all clean dependents
+.SECONDARY: 

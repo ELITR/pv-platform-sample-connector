@@ -1,0 +1,180 @@
+
+EBCLIENT = EBClient.exe
+AUDIORECORDER = AudioRecorder.exe
+EBCLIENT_BINARY = EBClient-binary.exe
+WORKER_BINARY = Worker-binary.exe
+
+EBCLIENT64 = EBClient64.exe
+AUDIORECORDER64 = AudioRecorder64.exe
+EBCLIENT_BINARY64 = EBClient-binary64.exe
+WORKER_BINARY64 = Worker-binary64.exe
+
+OUTDIR = exe32
+OUTDIR64 = exe64
+
+CURRENT_DIR = .
+!ifndef CURRENT_DIR
+!error  "error EBCLIENT base directory CURRENT_DIR not specified."	
+!else
+!MESSAGE "EBCLIENT base directory $(CURRENT_DIR) specified."	
+!endif
+
+
+SRC_DIR = $(CURRENT_DIR)\src
+!ifndef SRC_DIR
+!error  "error EBCLIENT source directory SRC_DIR not specified."	
+!else
+!MESSAGE "EBCLIENT source directory $(SRC_DIR) specified."	
+!endif
+
+VISUALSTUDIO_DIR = %PROGRAMFILES(X86)%\Microsoft Visual Studio 12.0\VC
+!ifndef VISUALSTUDIO_DIR
+!error  "error Visual Studio library directory VISUALSTUDIO_DIR not specified."	
+!else
+!MESSAGE "Visual Studio library directory $(VISUALSTUDIO_DIR) specified."	
+!endif
+
+
+LIBRARY_64_DIR = %PROGRAMFILES(X86)%\Microsoft SDKs\Windows\v7.1A\Lib\x64
+!ifndef LIBRARY_64_DIR
+!error  "error MCloud library MS SDK x64 directory LIBRARY_64_DIR not specified."	
+!else
+!MESSAGE "MCloud library MS SDK x64 directory $(LIBRARY_64_DIR) specified."	
+!endif
+
+
+CC = cl
+LL = link
+CC64 = "$(VISUALSTUDIO_DIR)\bin\x86_amd64\cl.exe"
+LL64 = "$(VISUALSTUDIO_DIR)\bin\x86_amd64\link.exe"
+
+
+CFLAGS =    /GS  /W3 /Zc:wchar_t /I"..\include" /I".\src\include" /Zi  /Od  /fp:precise /D "WIN32"  /D "_CONSOLE" /D "_CRT_SECURE_NO_WARNINGS" /D "_CRT_SECURE_NO_DEPRECATE" /D "_MBCS" /errorReport:prompt /WX- /Zc:forScope /RTC1 /Gd /Oy- /MD  /EHsc /nologo   
+
+CFLAGS64 =  /GS  /W3 /Zc:wchar_t /I"..\include" /I".\src\include" /Zi /Od  /fp:precise /D "WIN32"  /D "_CONSOLE" /D "_CRT_SECURE_NO_WARNINGS" /D "_CRT_SECURE_NO_DEPRECATE" /D "_MBCS" /errorReport:prompt /WX- /Zc:forScope /RTC1 /Gd /Oy- /MD  /EHsc /nologo  
+
+LFLAGS =  /DEBUG   /LIBPATH:".\lib32"   ".\lib32\MCloud.lib" ".\lib32\getopt.lib"  /MACHINE:X86   /SUBSYSTEM:CONSOLE  /ERRORREPORT:PROMPT /NOLOGO  /TLBID:1 
+
+LFLAGS64 = /DEBUG  /LIBPATH:".\lib64"   ".\lib64\MCloud.lib" ".\lib64\getopt.lib"  /MACHINE:X64   /SUBSYSTEM:CONSOLE  /ERRORREPORT:PROMPT /NOLOGO  /TLBID:1
+
+
+EBCLIENT_OBJ = EBClient.obj
+AUDIORECORDER_OBJ = AudioRecorder.obj
+EBCLIENT_BINARY_OBJ = EBClient_Binary.obj
+WORKER_BINARY_OBJ = Worker_Binary.obj
+
+EBCLIENT_OBJ64 = EBClient64.obj
+AUDIORECORDER_OBJ64 = AudioRecorder64.obj	
+EBCLIENT_BINARY_OBJ64 = EBClient_Binary64.obj
+WORKER_BINARY_OBJ64 = Worker_Binary64.obj
+	
+all: $(EBCLIENT)  $(AUDIORECORDER)
+
+all-binary: $(EBCLIENT)  $(EBCLIENT_BINARY) $(WORKER_BINARY) $(AUDIORECORDER)
+
+$(SRC_DIR)\$(EBCLIENT_OBJ): $(SRC_DIR)\exampleClientBidir.c
+	$(CC) $(CFLAGS) /c $(SRC_DIR)\exampleClientBidir.c /Fo$(SRC_DIR)\$(EBCLIENT_OBJ)
+	@echo "$(EBCLIENT_OBJ) complete"	
+	
+$(SRC_DIR)\$(AUDIORECORDER_OBJ): $(SRC_DIR)\AudioRecorder.c	
+	$(CC) $(CFLAGS) /c $(SRC_DIR)\AudioRecorder.c /Fo$(SRC_DIR)\$(AUDIORECORDER_OBJ)
+	@echo "$(AUDIORECORDER_OBJ) complete"	
+	
+$(SRC_DIR)\$(EBCLIENT_BINARY_OBJ): $(SRC_DIR)\exampleClientBinary.c
+	$(CC) $(CFLAGS) /c $(SRC_DIR)\exampleClientBinary.c /Fo$(SRC_DIR)\$(EBCLIENT_BINARY_OBJ)
+	@echo "$(EBCLIENT_BINARY_OBJ) complete"	
+	
+$(SRC_DIR)\$(WORKER_BINARY_OBJ): $(SRC_DIR)\exampleWorkerBinary.c
+	$(CC) $(CFLAGS) /c $(SRC_DIR)\exampleWorkerBinary.c /Fo$(SRC_DIR)\$(WORKER_BINARY_OBJ)
+	@echo "$(WORKER_BINARY_OBJ) complete"		
+	
+	
+$(EBCLIENT): $(SRC_DIR)\$(EBCLIENT_OBJ)
+	if not exist ".\$(OUTDIR)" mkdir .\$(OUTDIR)
+	$(LL)  $(LFLAGS)  /PDB:".\EBClient.pdb" $(SRC_DIR)\$(EBCLIENT_OBJ) /OUT:".\$(OUTDIR)\$(EBCLIENT)"
+	@echo "$(EBCLIENT) created"
+	
+$(EBCLIENT_BINARY): $(SRC_DIR)\$(EBCLIENT_BINARY_OBJ)
+	if not exist ".\$(OUTDIR)" mkdir .\$(OUTDIR)
+	$(LL)  $(LFLAGS)  /PDB:".\EBClient_binary.pdb" $(SRC_DIR)\$(EBCLIENT_BINARY_OBJ) /OUT:".\$(OUTDIR)\$(EBCLIENT_BINARY)"
+	@echo "$(EBCLIENT_BINARY) created"	
+	
+$(WORKER_BINARY): $(SRC_DIR)\$(WORKER_BINARY_OBJ)
+	if not exist ".\$(OUTDIR)" mkdir .\$(OUTDIR)
+	$(LL)  $(LFLAGS)  /PDB:".\Worker_binary.pdb" $(SRC_DIR)\$(WORKER_BINARY_OBJ) /OUT:".\$(OUTDIR)\$(WORKER_BINARY)"
+	@echo "$(WORKER_BINARY) created"		
+	
+$(AUDIORECORDER): $(SRC_DIR)\$(AUDIORECORDER_OBJ)	
+	$(LL)  $(LFLAGS)  /PDB:".\AudioRecorder.pdb" $(SRC_DIR)\$(AUDIORECORDER_OBJ) /OUT:".\$(OUTDIR)\$(AUDIORECORDER)"
+	@echo "$(AUDIORECORDER) created"
+	copy /Y .\lib32\*.dll $(OUTDIR)	
+	@echo "DLLs copied in $(OUTDIR)"
+	
+
+
+#------ version 64bit
+all64: $(EBCLIENT64) $(AUDIORECORDER64) 
+
+all-binary64: $(EBCLIENT64) $(EBCLIENT_BINARY64) $(WORKER_BINARY64) $(AUDIORECORDER64) 
+
+$(SRC_DIR)\$(EBCLIENT_OBJ64): $(SRC_DIR)\exampleClientBidir.c
+	$(CC64) $(CFLAGS64) /c $(SRC_DIR)\exampleClientBidir.c /Fo$(SRC_DIR)\$(EBCLIENT_OBJ64)
+	@echo "$(EBCLIENT_OBJ64) 64bit complete"	
+	
+$(SRC_DIR)\$(AUDIORECORDER_OBJ64): $(SRC_DIR)\AudioRecorder.c	
+	$(CC64) $(CFLAGS64) /c $(SRC_DIR)\AudioRecorder.c /Fo$(SRC_DIR)\$(AUDIORECORDER_OBJ64)
+	@echo "$(AUDIORECORDER_OBJ64) 64bit complete"	
+	
+$(SRC_DIR)\$(EBCLIENT_BINARY_OBJ64): $(SRC_DIR)\exampleClientBinary.c
+	$(CC64) $(CFLAGS64) /c $(SRC_DIR)\exampleClientBinary.c /Fo$(SRC_DIR)\$(EBCLIENT_BINARY_OBJ64)
+	@echo "$(EBCLIENT_BINARY_OBJ64) complete"	
+
+$(SRC_DIR)\$(WORKER_BINARY_OBJ64): $(SRC_DIR)\exampleWorkerBinary.c
+	$(CC64) $(CFLAGS64) /c $(SRC_DIR)\exampleWorkerBinary.c /Fo$(SRC_DIR)\$(WORKER_BINARY_OBJ64)
+	@echo "$(WORKER_BINARY_OBJ64) complete"	
+	
+	
+$(EBCLIENT64): $(SRC_DIR)\$(EBCLIENT_OBJ64)
+	if not exist ".\$(OUTDIR64)" mkdir .\$(OUTDIR64)
+	$(LL64)  $(LFLAGS64)  /PDB:".\EBClient64.pdb" $(SRC_DIR)\$(EBCLIENT_OBJ64) /OUT:".\$(OUTDIR64)\$(EBCLIENT64)"
+	@echo "$(EBCLIENT64) 64bit created"
+	
+$(EBCLIENT_BINARY64): $(SRC_DIR)\$(EBCLIENT_BINARY_OBJ64)
+	if not exist ".\$(OUTDIR64)" mkdir .\$(OUTDIR64)
+	$(LL64)  $(LFLAGS64)  /PDB:".\EBClient_binary64.pdb" $(SRC_DIR)\$(EBCLIENT_BINARY_OBJ64) /OUT:".\$(OUTDIR64)\$(EBCLIENT_BINARY64)"
+	@echo "$(EBCLIENT_BINARY64) created"
+
+$(WORKER_BINARY64): $(SRC_DIR)\$(WORKER_BINARY_OBJ64)
+	if not exist ".\$(OUTDIR64)" mkdir .\$(OUTDIR64)
+	$(LL64)  $(LFLAGS64)  /PDB:".\Worker_binary64.pdb" $(SRC_DIR)\$(WORKER_BINARY_OBJ64) /OUT:".\$(OUTDIR64)\$(WORKER_BINARY64)"
+	@echo "$(WORKER_BINARY64) created"		
+	
+$(AUDIORECORDER64): $(SRC_DIR)\$(AUDIORECORDER_OBJ64)	
+	$(LL64)  $(LFLAGS64)  /PDB:".\AudioRecorder64.pdb" $(SRC_DIR)\$(AUDIORECORDER_OBJ64) /OUT:".\$(OUTDIR64)\$(AUDIORECORDER64)"
+	@echo "$(AUDIORECORDER64) 64bit created"
+	copy /Y .\lib64\*.dll $(OUTDIR64)	
+	@echo "DLLs copied in $(OUTDIR64)"
+
+	
+	
+#----- If OUTDIR does not exist, then create directory
+$(OUTDIR) :
+    if not exist "$(OUTDIR)/$(NULL)" mkdir $(OUTDIR)	
+
+clean:
+	@if exist $(OUTDIR) rmdir /S /Q $(OUTDIR)
+	@if exist $(OUTDIR64) rmdir /S /Q $(OUTDIR64)	
+	del /Q /F *.asm *pdb *idb $(SRC_DIR)\*obj $(SRC_DIR)\*64.obj
+	@echo "clean complete"
+	
+clean32:
+	@if exist $(OUTDIR) rmdir /S /Q $(OUTDIR)	
+	del /Q /F *.asm *pdb *idb $(SRC_DIR)\*obj
+	@echo "clean 32bit complete"	
+	
+clean64:
+	@if exist $(OUTDIR64) rmdir /S /Q $(OUTDIR64)	
+	del /Q /F *.asm *pdb *idb $(SRC_DIR)\*64.obj
+	@echo "clean 64bit complete"
+	
+	

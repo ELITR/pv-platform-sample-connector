@@ -1,0 +1,37 @@
+This directory contains the libraries required for Windows. In difference to
+the Linux libraries, libxml2 is already included.
+
+
+Content:
+--------
+lib32			Required libraries for Windows
+
+
+Example Command Lines:
+----------------------
+ExampleClient.exe ../audio/talk1313.mp4-16kHz.wav
+
+
+RAW XML protocoll:
+------------------
+If you are not happy with the convenience functions provided with the API,
+the raw XML protocol can also be used, as specified in the Deliverable
+D4.1. It is also possible to mix raw XML access and the usage of the
+convenience functions. For example, you could use the convenience functions
+for connecting to the MCloud, and receivig and sending packets, but work
+with raw XML for processing the content of a data packet. However, be
+aware, that if the XML format needs to be changed, the effort for updating
+your components might be more as if you've used the convenience
+functions.
+
+The specified content of the data packets for audio, text, and word tokens
+are just examples. It can be changed and also adjusted to specific needs.
+The Mediator doesn't care about the content of a data packet, it just
+passes it to the subsequent backend. However, in order to exchange data
+between different integrated backend of different partners, each backend
+should at least be able to understand the data packet formats provided.
+
+
+
+
+

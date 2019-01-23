@@ -1,0 +1,176 @@
+<!-- XSD for messages -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"> 
+
+<!-- client announces to the mediator the avilability of sessions, i.e. lectures
+     currently only one flow is supported -->
+  <xsd:element name="flow"> 
+  <xsd:complexType> 
+    <xsd:all>
+      <xsd:element name="sessioninfos" type="sessioninfos" minOccurs="1" maxOccurs="1"/>
+    </xsd:all>
+    <xsd:attribute name="password" type="xsd:string"/>
+    <xsd:attribute name="sessionid" type="xsd:string" use="required"/>
+  </xsd:complexType>
+  </xsd:element> 
+
+  <xsd:complexType name="sessioninfos"> 
+    <xsd:sequence>
+      <xsd:element name="sessioninfo" minOccurs="1" maxOccurs="unbounded" type="sessioninfo"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="sessioninfo"> 
+      <xsd:attribute name="language" type="xsd:string" use="required"/>
+      <xsd:attribute name="name" type="xsd:string" use="required"/> 
+      <xsd:attribute name="description" type="xsd:string" use="required"/>
+  </xsd:complexType>
+
+<!-- status messages from and to the mediator -->
+<xsd:element name="status">
+  <xsd:complexType>
+    <xsd:attribute name="type" type="statustype" use="required"/>
+    <xsd:attribute name="description" type="xsd:string"/>
+    <xsd:anyAttribute/>
+  </xsd:complexType>
+</xsd:element>
+
+<xsd:simpleType name="statustype">
+  <xsd:restriction base="xsd:string">
+    <xsd:enumeration value="ok"/>
+    <xsd:enumeration value="done"/>
+    <xsd:enumeration value="ready"/>
+    <xsd:enumeration value="error"/>
+    <xsd:enumeration value="reset"/>
+    <xsd:enumeration value="connect"/>
+    <xsd:enumeration value="flush"/>
+  </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:element name="register">
+  <xsd:complexType>
+    <xsd:sequence>
+      <xsd:element name="streams" type="streams" minOccurs="1" maxOccurs="1"/>
+    </xsd:sequence>
+    <xsd:attribute name="type" type="registertype" use="required"/>
+    <xsd:attribute name="sessionid" type="xsd:string" use="required"/>
+  </xsd:complexType>
+</xsd:element>
+
+
+<xsd:simpleType name="registertype">
+  <xsd:restriction base="xsd:string">
+    <xsd:enumeration value="add"/>
+    <xsd:enumeration value="delete"/>
+  </xsd:restriction>
+</xsd:simpleType>
+
+
+<xsd:element name="streams">
+  <xsd:complexType>
+    <xsd:sequence>
+      <xsd:element name="stream" type="stream" minOccurs="1" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:element>
+
+
+<!-- client request the mediator to send him data of this type -->
+<xsd:element name="stream">
+  <xsd:complexType>
+      <xsd:attribute name="type" type="xsd:string" use="required"/>
+      <xsd:attribute name="fingerprint" type="xsd:string" use="required"/>
+      <xsd:attribute name="streamid" type="xsd:string" use="required"/>
+  </xsd:complexType>
+</xsd:element>
+
+<!-- client announces to the mediator that it will send data of this type
+     this results in a node message, which is send to potential workers in order to process the data -->
+<xsd:element name="inputnode">
+  <xsd:complexType>
+      <xsd:attribute name="type" type="xsd:string" use="required"/>
+      <xsd:attribute name="fingerprint" type="xsd:string" use="required"/>
+      <xsd:attribute name="streamid" type="xsd:string" use="required"/>
+      <xsd:anyAttribute/>
+  </xsd:complexType>
+</xsd:element>
+
+<!-- worker announces to the mediator the availibility of a service of this type -->
+<xsd:element name="node">
+  <xsd:complexType>
+      <xsd:attribute name="name" type="xsd:string"/>
+      <xsd:attribute name="sessionid" type="xsd:string"/>
+      <xsd:attribute name="service" type="xsd:string"/>
+      <xsd:attribute name="streamid" type="xsd:string"/>
+      <xsd:attribute name="inputfingerprint" type="xsd:string"/>
+      <xsd:attribute name="inputtype" type="xsd:string"/>
+      <xsd:attribute name="outputfingerprint" type="xsd:string"/>
+      <xsd:attribute name="outputtype" type="xsd:string"/>
+      <xsd:anyAttribute/>
+  </xsd:complexType>
+</xsd:element>
+
+<xsd:element name="edge" type="edge"/>
+  <xsd:complexType name="edge">
+      <xsd:attribute name="from" type="xsd:string"/>
+      <xsd:attribute name="to" type="xsd:string"/>
+</xsd:complexType>
+
+<!-- client tells the mediator that the DisplayServer is allowed to output the data sent -->
+<xsd:element name="announce">
+  <xsd:complexType>
+    <xsd:anyAttribute/>
+  </xsd:complexType>
+</xsd:element>
+
+<!-- data messages -->
+<xsd:element name="data">
+	<xsd:complexType>
+		<xsd:attribute name="creator" type="xsd:string" use="required"/>
+		<xsd:attribute name="type" type="xsd:string" use="required"/>
+		<xsd:attribute name="sessionid" type="xsd:string" use="required"/>
+		<xsd:attribute name="fingerprint" type="xsd:string" use="required"/>
+		<xsd:attribute name="streamid" type="xsd:string" use="required"/>
+		<xsd:attribute name="start" type="xsd:string" use="required"/>
+		<xsd:attribute name="stop" type="xsd:string" use="required"/>
+		<xsd:anyAttribute/>
+		<xsd:all>
+			<xsd:element name="audio" type="audioE" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="text" type="textE" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="image" type="imageE" minOccurs="0" maxOccurs="1"/>
+		</xsd:all>
+	</xsd:complexType>
+</xsd:element>
+
+<xsd:complexType name="audioE">
+	<xsd:simpleContent>
+		<xsd:extension base="xsd:string">
+			<xsd:attribute name="bits" type="xsd:string" use="required"/>
+			<xsd:attribute name="srate" type="xsd:string" use="required"/>
+			<xsd:attribute name="channels" type="xsd:string" use="required"/>
+			<xsd:attribute name="samples" type="xsd:string" use="required"/>
+			<xsd:attribute name="codec" type="xsd:string" use="required"/>
+			<xsd:attribute name="encoding" type="xsd:string" use="required"/>
+		</xsd:extension>
+	</xsd:simpleContent>
+</xsd:complexType>
+
+<xsd:complexType name="imageE">
+        <xsd:simpleContent>
+	        <xsd:extension base="xsd:string">
+			<xsd:attribute name="width" type="xsd:string" use="required"/>
+		        <xsd:attribute name="height" type="xsd:string" use="required"/>
+		        <xsd:attribute name="format" type="xsd:string" use="required"/>
+			<xsd:attribute name="encoding" type="xsd:string" use="required"/>
+		</xsd:extension>
+	</xsd:simpleContent>
+</xsd:complexType>
+
+<xsd:complexType name="textE">
+        <xsd:simpleContent>
+	        <xsd:extension base="xsd:string">
+			<xsd:attribute name="encoding" type="xsd:string" use="required"/>
+		</xsd:extension>
+	</xsd:simpleContent>
+</xsd:complexType>
+
+</xsd:schema>

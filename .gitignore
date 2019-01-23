@@ -12,9 +12,7 @@
 *.pch
 
 # Compiled Dynamic libraries
-*.so
 *.dylib
-*.dll
 
 # Fortran module files
 *.mod
@@ -30,3 +28,6 @@
 *.exe
 *.out
 *.app
+
+#Files
+pv-platform-sample-connector.pdf
