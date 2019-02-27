@@ -15,16 +15,38 @@ Example Command Lines:
 export LD_LIBRARY_PATH=lib64
 
 First the backends need to be started
-	./backendASR2 -s demo.audioma.it -p 60021 &
+	./backendASR2 -s mediator.pervoice.com -p 60021 &
 
 
 After that, the client can be started.
-        ./ebclient -s demo.audioma.it -p 4445 -i en-DB -f en-DB ../../../audio/talk1313.mp4-16kHz.wav
+        ./ebclient -s mediator.pervoice.com -p 4445 -i en-DB -f en-DB ../../../audio/talk1313.mp4-16kHz.wav
 
 Note that in this example you need to press enter in order to start sending the data.
 With this call, the ASR results will be displayed only.
 
+More examples:
+---------------------
 
+in order to pass an audio file to ebclient an option is to pass file as parameter:
+ ebclient -s mediator.pervoice.com -i de-de-news -f de-de-news audio.wav
 
+ebclient prints on stdout, but you can redirect it to a file
+ ebclient -s mediator.pervoice.com -i de-de-news -f de-de-news audio.wav > audio.seg
+
+ebclient accepts also PCM on stdin
+ ffmpeg -i /tmp/DE_TESTSRFCHTagesschau201110012359.wav -f s16le -acodec pcm_s16le /tmp/DE_TESTSRFCHTagesschau201110012359.raw
+ cat /tmp/DE_TESTSRFCHTagesschau201110012359.raw | ./ebclient -s mediator.pervoice.com -i de-de-news -f de-de-news
+
+starting from this, the arecord use case might be something like
+ arecord -f S16_LE -c1 -r 16000 -t raw | ./ebclient -s mediator.pervoice.com -i XXX -f XXX
+however this will require a real time ASR worker
+
+among the provided C example there's audioRecorder.c. It implements a super-naive server-side audio recorder and can be run as follows:
+ ./audiorecorder -s mediator.pervoice.com -p 60021 -i it-recorder -f it-recorder
+
+after recorder has been started, you can use ebclient to test it:
+ ./ebclient -s mediator.pervoice.com -i de-recorder -f de-recorder /tmp/DE_TESTSRFCHTagesschau201110012359.wav
+ebclient will send audio and audiorecorder will write worker-side (which means server-side) a pcm file with timestamps like: recording-20190227_1602.pcm
+ ffmpeg -f s16le -ar 16k -ac 1 -i recording-20190227_1602.pcm recording-20190227_1602.wav
 
 
