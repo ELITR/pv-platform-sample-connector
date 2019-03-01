@@ -49,4 +49,5 @@ after recorder has been started, you can use ebclient to test it:
 ebclient will send audio and audiorecorder will write worker-side (which means server-side) a pcm file with timestamps like: recording-20190227_1602.pcm
  ffmpeg -f s16le -ar 16k -ac 1 -i recording-20190227_1602.pcm recording-20190227_1602.wav
 
-
+How to require 2 diifferent input stream starting from an output stream:
+ cat recording-20190226_1642.pcm | ./ebclient -s mediator.pervoice.com -s mediator.pervoice.com -p 4445 -i de-de-news  -i de-recorder -f de-de-news
