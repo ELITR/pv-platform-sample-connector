@@ -15,6 +15,19 @@
 #include "MCloud.h"
 
 
+// https://stackoverflow.com/questions/2347770/how-do-you-clear-the-console-screen-in-c
+#include <unistd.h>
+void clearScreen()
+{
+  const char *CLEAR_SCREEN_ANSI = "\e[1;1H\e[2J";
+  write(STDOUT_FILENO, CLEAR_SCREEN_ANSI, 12);
+}
+
+
+// my extension
+int interactive = 0;
+
+
 typedef struct MCloudQueue_S    MCloudQueue;
 
 /* =========================================================================
@@ -48,6 +61,7 @@ static void printUsage (char *prgName) {
 		"\t-x, --plaintxt\n\t\tProvides output in plain text.\n\n"
 		"\t-T, --ssl\n\t\tProvides ssl connection to Mediator.\n\n"
 		"\t-W, --selfSigned\n\t\tAccept self signed certify from Server.\n\n"
+		"\t-I, --interactive\n\t\tInteractive mode. Shows only the subtitles.\n\n"
 		"\t-h, --help\n\t\tShows this help.\n\n"
 		);
 	printf ("\n\tVersion v1.1\n");
@@ -173,7 +187,12 @@ int dataCallback (MCloud *cP, MCloudPacket *p, void *userData) {
 
 	if ( mcloudPacketGetWordTokenA (cloudP, p, &tokenA, &tokenN) != S2S_Success ) {
 		mcloudPacketGetText (cloudP, p, &text);
-		fprintf (stderr, "received text from stream %s: %s\n", p->streamID, text);
+		if (!interactive)
+			fprintf (stderr, "received text from stream %s: %s\n", p->streamID, text);
+		else {
+//			clearScreen();
+			fprintf (stderr, "%s\n", text);
+		}
 
 		if ( ud->fpCTM && text && text[0] != '\0' ) {
 			S2S_Time startT;
@@ -192,10 +211,11 @@ int dataCallback (MCloud *cP, MCloudPacket *p, void *userData) {
 			/*
 			static void writeCTM (MCloudWordToken *a, int n, FILE *fp, float from, char *utt, char *conv, int channelX) {
 			*/
+			if (!interactive)
 #ifdef USE_TCL
-			writeCTM2(text, offset, duration, ud->fpCTM, utt, ud->conv, 1);
+				writeCTM2(text, offset, duration, ud->fpCTM, utt, ud->conv, 1);
 #else
-			writeCTM(tokenA, tokenN, ud->fpCTM, 0, utt, ud->conv, 1);
+				writeCTM(tokenA, tokenN, ud->fpCTM, 0, utt, ud->conv, 1);
 #endif
 		}
 		free (text); text = NULL;
@@ -405,6 +425,7 @@ int main (int argc, char * argv[]) {
 	S2S_Time startT;
 	S2S_Time stopT;
 
+
 	static struct option lopt[] = {
 		{"serverHost", 1, NULL, 's'},
 		{"serverPort", 1, NULL, 'p'},
@@ -424,6 +445,8 @@ int main (int argc, char * argv[]) {
 		{"ssl", 0, 0, 'T'},
 		{"selfSigned", 0, 0, 'W'},		
 		{ "help", 0, 0, 'h' },
+		// my extension
+		{"interactive", 0, 0, 'I'},
 		{NULL, 0, 0, 0}
 	};
 
@@ -435,7 +458,7 @@ int main (int argc, char * argv[]) {
 
 
 
-	while ( (o = getopt_long (argc, argv, "s:p:U:P:f:i:t:l:w:n:xrhC:B:S:TW", lopt, &optX)) != -1 ) {
+	while ( (o = getopt_long (argc, argv, "s:p:U:P:f:i:t:l:w:n:xrhIC:B:S:TW", lopt, &optX)) != -1 ) {
 		switch (o) {
 		case 's':
 			serverHost = strdup (optarg);
@@ -490,6 +513,9 @@ int main (int argc, char * argv[]) {
 		case 'W':
 			verifyMode = MCloudSSL_AcceptSelfSigned;
 			break;			
+		case 'I':
+			interactive = 1;
+			break;
 		case 'h':
 		case '?':
 		default:
