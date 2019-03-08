@@ -29,6 +29,8 @@ static char* outputDir = NULL;
 
 
 #define TOUCHFILE "recording"
+static time_t touchfile_last_change = 0;
+
 
 
 static void datetostr(char *date) {
@@ -39,24 +41,42 @@ static void datetostr(char *date) {
 
 
 	// https://stackoverflow.com/questions/10192903/time-in-milliseconds
-	struct timeval now;
-	gettimeofday(&now, NULL);
+//	struct timeval now;
+//	gettimeofday(&now, NULL);
+//	printf("%d\n",now.tv_sec);
 
 	if(tnow != -1) {
 		strftime(date, MAX_DATE_LEN, "%Y%m%d_%H%M%S", gmtime(&tnow));
 	}
-	sprintf(date, "%s.%f", date, now.tv_usec);
+//	sprintf(date, "%s.%f", date, now.tv_usec);
 	return &date;
 }
 
 
 // start or stop recording, depending on the touchfile
 static void check_segmenting() {
+//	struct timeval now;
+//	gettimeofday(&now, NULL);
+//	printf("tady %d\n",((now.tv_sec==last.tv_sec) && (now.tv_usec==last.tv_usec))?1:0);
+//	last = now;
+
 
 	FILE *f;
 	if ((f = fopen(TOUCHFILE, "r"))) {
+		struct stat touch_stat;
+		stat(TOUCHFILE, &touch_stat);
+		time_t mod_time = touch_stat.st_ctime;
+		printf("mod_time %d %d\n",mod_time, touchfile_last_change);
+
+		if ((mod_time != touchfile_last_change) && (segmentFile != NULL)) {
+			fclose(segmentFile);
+			segmentFile = NULL;
+		}
 
 		if (segmentFile == NULL) { // recording is off, start it
+
+			touchfile_last_change = mod_time;
+
 
 			char buf[BUFSIZ];
 			char content[BUFSIZ];
@@ -70,7 +90,6 @@ static void check_segmenting() {
 					content[i] = buf[i];
 				}
 			}
-			fclose(f);
 
 			if ((content[0] == '\0')) {
 				char date[MAX_DATE_LEN];
@@ -91,17 +110,21 @@ static void check_segmenting() {
 				i++;
 			}
 			// open a new segmentFile => recording is started
+			printf("opening new %s\n",segmentFileName);
 			segmentFile = fopen(segmentFileName, "wb");
 
-		}/* else { // recording is running, let it be
+		}/* else { // recording is running, keep it 
 		}
 		*/
+
+		fclose(f);
 
 
 	} else { // touchfile doesn't exist
 		if (segmentFile != NULL) { // recording is on, close it
 			fclose(segmentFile);
 			segmentFile = NULL;
+			puts("closing segmentFile\n");
 		}
 	}
 

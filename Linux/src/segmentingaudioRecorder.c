@@ -294,7 +294,6 @@ int errorCallback (MCloud *cP, void *userData) {
  * Main Function
  * ========================================================================= */
 int main (int argc, char * argv[]) {
-
   char *serverHost    = NULL;
   int   serverPort    = 60021;
   
