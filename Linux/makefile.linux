@@ -5,12 +5,12 @@ EXT_LIB_DIR=./lib32/
 
 CC = gcc
 LD = gcc
-CFLAGS += -I $(INCLUDE_DIR) -g -Wall -fPIC
+CFLAGS += -I $(INCLUDE_DIR) -g -Wall -fPIC `xml2-config --cflags --libs`
 CXXFLAGS += -I $(INCLUDE_DIR)
 
 LIBSFLAGS = -lm -lMCloud -lpthread
 
-EXES = ebclient audiorecorder backendASR2 backendSMT backendSMTAuth backendASR2Auth exampleClientSMT exampleWorkerBinary exampleClientBinary
+EXES = ebclient segmentingaudiorecorder audiorecorder backendASR2 backendSMT backendSMTAuth backendASR2Auth exampleClientSMT exampleWorkerBinary exampleClientBinary
 
 OS = $(shell uname -s)
 TARGET_PLATFORM ?= $(shell uname -m)
@@ -53,6 +53,10 @@ $(SRC_DIR)/ebclient.o: $(SRC_DIR)/exampleClientBidir.c
 
 $(SRC_DIR)/audiorecorder.o: $(SRC_DIR)/audioRecorder.c
 	$(CC) $(CFLAGS) -c -o $(SRC_DIR)/audiorecorder.o $(SRC_DIR)/audioRecorder.c
+
+$(SRC_DIR)/segmentingaudiorecorder.o: $(SRC_DIR)/segmentingaudioRecorder.c $(SRC_DIR)/segmenting.h
+	$(CC) $(CFLAGS) -c -o $(SRC_DIR)/segmentingaudiorecorder.o $(SRC_DIR)/segmentingaudioRecorder.c
+
 
 %: $(SRC_DIR)/%.o
 	LD_LIBRARY_PATH=$(EXT_LIB_DIR) $(LD) $(LDFLAGS) -o $@ $< $(LIBSFLAGS)
