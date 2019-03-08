@@ -24,6 +24,7 @@ typedef void* ASR_Handle;       /* define dummy handle for this examle */
 static int windex = 0;           /* dummy index for this example */
 static FILE* outputFile = NULL;
 static char* outputDir = NULL;
+static int output_stdout = 0;
 
 /* =========================================================================
  * Type Definitions
@@ -55,6 +56,7 @@ static void printUsage (char *prgName) {
       "\t-f, --fingerPrint=FPRINT\n\t\tLanguage finger print of the audio file given. (en-EU)\n\n"
       "\t-i, --inputStream=FPRINT\n\t\tLanguage finger print for the results requested. (en)\n\n"
       "\t-d, --outpuFolder=OUTPUT_FOLDER\n\t\tOutput Folder to put recordings to\n\n"
+      "\t-o, --output\n\t\tOutput the recording also to stdout\n\n"
       "\t-T, --ssl\n\t\tProvides ssl connection to Mediator.\n\n"
       "\t-W, --selfSigned\n\t\tAccept self signed certify from Server.\n\n"	
       "\t-h, --help\n\t\tShows this help.\n\n"
@@ -105,13 +107,14 @@ int initCallback (MCloud *cP, MCloudPacket *p, void *userData) {
   /* initialize the ASR in order to be able to start decoding a
      new utterance */
   //asr_InitDecode (asrH);
-  
+
+	  
   now = time(NULL);
   date[0] = '\0';
   filename[0] = '\0';
 
   if(now != -1) {
-    strftime(date, MAX_DATE_LEN, "%Y%m%d_%H%M", gmtime(&now));
+	strftime(date, MAX_DATE_LEN, "%Y%m%d_%H%M", gmtime(&now));
   }
   
   sprintf(filename, "%s/recording-%s.pcm", outputDir, date);
@@ -142,6 +145,8 @@ int dataCallback (MCloud *cP, MCloudPacket *p, void *userData) {
     mcloudPacketGetAudio (cP, p, &sampleA, &sampleN);
     
     fwrite(sampleA, sizeof(short), sampleN, outputFile);
+	if (output_stdout)
+		fwrite(sampleA, sizeof(short), sampleN, stdout);
 
     if ( !ud->startTime ) ud->startTime = strdup (p->start);
     
@@ -319,6 +324,7 @@ int main (int argc, char * argv[]) {
       {"fingerPrint", 1, NULL, 'f' },
       {"inputStream", 1, NULL, 'i'},
       {"outputDir", 1, 0, 'd'},
+	  {"output",0, 0, 'o'},
       {"ssl", 0, 0, 'T'},
       {"selfSigned", 0, 0, 'W'},	
       {"help", 0, 0, 'h'},
@@ -331,7 +337,7 @@ int main (int argc, char * argv[]) {
     return -1;
   }
 
-  while ( (o = getopt_long (argc, argv, "s:p:d:f:i:TWh", lopt, &optX)) != -1 ) {
+  while ( (o = getopt_long (argc, argv, "s:p:d:f:i:ToWh", lopt, &optX)) != -1 ) {
     switch (o) {
     case 's':
       serverHost = strdup (optarg);
@@ -354,6 +360,9 @@ int main (int argc, char * argv[]) {
     case 'W':
       verifyMode = MCloudSSL_AcceptSelfSigned;
       break;		
+	case 'o':
+		output_stdout = 1;
+		break;
     case 'h':
     case '?':
     default:
