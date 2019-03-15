@@ -25,6 +25,7 @@
 typedef void* ASR_Handle;       /* define dummy handle for this examle */
 static int windex = 0;           /* dummy index for this example */
 static FILE* outputFile = NULL;
+static int output_stdout = 0;
 
 /* =========================================================================
  * Type Definitions
@@ -56,6 +57,7 @@ static void printUsage (char *prgName) {
       "\t-f, --fingerPrint=FPRINT\n\t\tLanguage finger print of the audio file given. (en-EU)\n\n"
       "\t-i, --inputStream=FPRINT\n\t\tLanguage finger print for the results requested. (en)\n\n"
       "\t-d, --outpuFolder=OUTPUT_FOLDER\n\t\tOutput Folder to put recordings to\n\n"
+      "\t-o, --output\n\t\tOutput the recording also to stdout\n\n" 
       "\t-T, --ssl\n\t\tProvides ssl connection to Mediator.\n\n"
       "\t-W, --selfSigned\n\t\tAccept self signed certify from Server.\n\n"	
       "\t-h, --help\n\t\tShows this help.\n\n"
@@ -151,6 +153,9 @@ int dataCallback (MCloud *cP, MCloudPacket *p, void *userData) {
 	// record to the segment file, if it's opened
 	if (segmentFile != NULL)
 		fwrite(sampleA, sizeof(short), sampleN, segmentFile);
+
+	if (output_stdout)
+		fwrite(sampleA, sizeof(short), sampleN, stdout);
 
     if ( !ud->startTime ) ud->startTime = strdup (p->start);
     
@@ -254,6 +259,7 @@ int finalizeCallback (MCloud *cP, void *userData) {
   /* all packets have been processed with dataCallback
      e.g. retrieve last partial result in case of real-time processing,
      or retrieve finalized hypothesis in case of batch processing (see above dataCallback) */
+  check_segmenting();
   fclose(outputFile);
   
   return 0;
@@ -270,6 +276,7 @@ int breakCallback (MCloud *cP, void *userData) {
 
   /* break processing of pending packets in ASR thread */
   //asr_Break (asrH);
+  close_segmenting();
 
   return 0;
 }
@@ -284,6 +291,7 @@ int errorCallback (MCloud *cP, void *userData) {
 
   /* break processing of pending packets in ASR thread */
   //asr_Break (asrH);
+  close_segmenting();
   fclose(outputFile);
 
   return 0;
@@ -329,6 +337,7 @@ int main (int argc, char * argv[]) {
       {"outputDir", 1, 0, 'd'},
       {"ssl", 0, 0, 'T'},
       {"selfSigned", 0, 0, 'W'},	
+	  {"output",0, 0, 'o'},
       {"help", 0, 0, 'h'},
       {NULL, 0, 0, 0}
   };
@@ -339,7 +348,7 @@ int main (int argc, char * argv[]) {
     return -1;
   }
 
-  while ( (o = getopt_long (argc, argv, "s:p:d:f:i:TWh", lopt, &optX)) != -1 ) {
+  while ( (o = getopt_long (argc, argv, "s:p:d:f:i:ToWh", lopt, &optX)) != -1 ) {
     switch (o) {
     case 's':
       serverHost = strdup (optarg);
@@ -359,6 +368,9 @@ int main (int argc, char * argv[]) {
     case 'T':
       ssl = 1;
       break;
+	case 'o':
+		output_stdout = 1;
+		break;
     case 'W':
       verifyMode = MCloudSSL_AcceptSelfSigned;
       break;		

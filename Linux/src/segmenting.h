@@ -46,10 +46,17 @@ static void datetostr(char *date) {
 //	printf("%d\n",now.tv_sec);
 
 	if(tnow != -1) {
-		strftime(date, MAX_DATE_LEN, "%Y%m%d_%H%M%S", gmtime(&tnow));
+		strftime(date, MAX_DATE_LEN, "%Y%m%d_%H%M%S", localtime(&tnow));
 	}
 //	sprintf(date, "%s.%f", date, now.tv_usec);
 	return &date;
+}
+
+static void close_segmenting() {
+	fclose(segmentFile);
+	segmentFile = NULL;
+	fprintf(stderr, "STOP closing segmentfile %s\n",segmentFileName);
+	return;
 }
 
 
@@ -66,11 +73,10 @@ static void check_segmenting() {
 		struct stat touch_stat;
 		stat(TOUCHFILE, &touch_stat);
 		time_t mod_time = touch_stat.st_ctime;
-		printf("mod_time %d %d\n",mod_time, touchfile_last_change);
+		//fprintf(stderr, "mod_time %d %d\n",mod_time, touchfile_last_change);
 
 		if ((mod_time != touchfile_last_change) && (segmentFile != NULL)) {
-			fclose(segmentFile);
-			segmentFile = NULL;
+			close_segmenting();
 		}
 
 		if (segmentFile == NULL) { // recording is off, start it
@@ -110,7 +116,7 @@ static void check_segmenting() {
 				i++;
 			}
 			// open a new segmentFile => recording is started
-			printf("opening new %s\n",segmentFileName);
+			fprintf(stderr, "START opening new segmentfile %s\n",segmentFileName);
 			segmentFile = fopen(segmentFileName, "wb");
 
 		}/* else { // recording is running, keep it 
@@ -122,9 +128,7 @@ static void check_segmenting() {
 
 	} else { // touchfile doesn't exist
 		if (segmentFile != NULL) { // recording is on, close it
-			fclose(segmentFile);
-			segmentFile = NULL;
-			puts("closing segmentFile\n");
+			close_segmenting();
 		}
 	}
 
