@@ -55,16 +55,18 @@ nmake  -f makefile.win clean --> clean exe32 and exe64 and all .obj files
 
 unix32:
 in linux folder
+```
 TARGET_PLATFORM=i686 make -f makefile.linux
 export LD_LIBRARY_PATH=./lib32
-
 make -f makefile.linux clean
+```
 
 unix64:
 in linux folder
+```
 TARGET_PLATFORM=x86_64 make -f makefile.linux
 export LD_LIBRARY_PATH=./lib64
-
 make -f makefile.linux clean
+```
 
 -- created audiorecorder and ebclient in linux directory --
