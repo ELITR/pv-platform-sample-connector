@@ -425,6 +425,8 @@ int main (int argc, char * argv[]) {
 	S2S_Time startT;
 	S2S_Time stopT;
 
+	int inputRequestAttempts = 2; // Attempt input stream request to Mediator up to N times
+	int inputRequestAttemptTimeoutMS = 2000; // Wait N milliseconds in between attempts
 
 	static struct option lopt[] = {
 		{"serverHost", 1, NULL, 's'},
@@ -662,11 +664,20 @@ int main (int argc, char * argv[]) {
 		if ( !inputType ) inputType = strdup ("speech");
 		for (i=0; i<inputStreamN; i++) {
 			char info[2048];
-			if ( mcloudRequestInputStream (cloudP, inputType, inputStreamA[i], "speech", info, 2048) != S2S_Success ) {
-				fprintf (stderr, "ERROR unable to request input stream.\n");
-				return -1;
+			int attempt;
+			for (attempt = inputRequestAttempts;; attempt--) {
+				if ( mcloudRequestInputStream (cloudP, inputType, inputStreamA[i], "speech", info, 2048) == S2S_Success ) {
+					fprintf(stderr, "INFO: %s\n", info);
+					break;
+				}
+				if (attempt < 2) {
+					fprintf (stderr, "ERROR unable to request input stream after %d attempts. Giving up.\n", inputRequestAttempts);
+					return -1; // After the last attempt, we give up
+				}
+				fprintf (stderr, "ERROR unable to request input stream after %d of %d attempts. Retrying in %dms\n",
+						inputRequestAttempts -attempt +1, inputRequestAttempts, inputRequestAttemptTimeoutMS);
+				Sleep(inputRequestAttemptTimeoutMS);
 			}
-			fprintf(stderr, "INFO: %s\n", info);
 		}
 		mcloudSetErrorCallback (cloudP, MCloudProcessingQueue, errorCallback, &recvUserData);
 		mcloudSetBreakCallback (cloudP, MCloudProcessingQueue, breakCallback, &recvUserData);
